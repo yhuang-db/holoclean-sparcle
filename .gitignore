@@ -29,3 +29,11 @@ debug/
 # sparcle
 venv/
 reset_pg_db_user.sh
+testdata/*
+!testdata/adult/
+!testdata/flight/
+!testdata/hospital
+!testdata/met
+examples/*.py
+!examples/holoclean_repair_example.py
+!examples/holoclean_repair_example_db.py
