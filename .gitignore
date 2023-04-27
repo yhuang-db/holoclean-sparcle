@@ -25,3 +25,6 @@ info/
 
 # Holoclean specific files
 debug/
+
+# sparcle
+venv/
