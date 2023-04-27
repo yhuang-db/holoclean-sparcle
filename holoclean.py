@@ -29,13 +29,13 @@ arguments = [
     (('-u', '--db_user'),
         {'metavar': 'DB_USER',
          'dest': 'db_user',
-         'default': 'holocleanuser',
+         'default': 'holouser',
          'type': str,
          'help': 'User for DB used to persist state.'}),
     (('-p', '--db-pwd', '--pass'),
         {'metavar': 'DB_PWD',
          'dest': 'db_pwd',
-         'default': 'abcd1234',
+         'default': 'holopass',
          'type': str,
          'help': 'Password for DB used to persist state.'}),
     (('-h', '--db-host'),
@@ -47,7 +47,7 @@ arguments = [
     (('-d', '--db_name'),
         {'metavar': 'DB_NAME',
          'dest': 'db_name',
-         'default': 'holo',
+         'default': 'holodb',
          'type': str,
          'help': 'Name of DB used to persist state.'}),
     (('-t', '--threads'),
@@ -433,7 +433,7 @@ class Session:
         logging.debug('Time to featurize data: %.2f secs', feat_time)
         status, setup_time = self.repair_engine.setup_repair_model()
         logging.info(status)
-        logging.debug('Time to setup repair model: %.2f secs', feat_time)
+        logging.debug('Time to setup repair model: %.2f secs', setup_time)
 
         # If validation fpath provided, fit and validate
         if fpath is None:
