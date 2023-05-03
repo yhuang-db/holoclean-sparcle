@@ -16,40 +16,38 @@ from evaluate import EvalEngine
 from dataset.quantization import quantize_km
 from utils import NULL_REPR
 
-
 logging.basicConfig(format="%(asctime)s - [%(levelname)5s] - %(message)s", datefmt='%H:%M:%S')
 root_logger = logging.getLogger()
 gensim_logger = logging.getLogger('gensim')
 root_logger.setLevel(logging.INFO)
 gensim_logger.setLevel(logging.WARNING)
 
-
 # Arguments for HoloClean
 arguments = [
     (('-u', '--db_user'),
-        {'metavar': 'DB_USER',
-         'dest': 'db_user',
-         'default': 'holouser',
-         'type': str,
-         'help': 'User for DB used to persist state.'}),
+     {'metavar': 'DB_USER',
+      'dest': 'db_user',
+      'default': 'holouser',
+      'type': str,
+      'help': 'User for DB used to persist state.'}),
     (('-p', '--db-pwd', '--pass'),
-        {'metavar': 'DB_PWD',
-         'dest': 'db_pwd',
-         'default': 'holopass',
-         'type': str,
-         'help': 'Password for DB used to persist state.'}),
+     {'metavar': 'DB_PWD',
+      'dest': 'db_pwd',
+      'default': 'holopass',
+      'type': str,
+      'help': 'Password for DB used to persist state.'}),
     (('-h', '--db-host'),
-        {'metavar': 'DB_HOST',
-         'dest': 'db_host',
-         'default': 'localhost',
-         'type': str,
-         'help': 'Host for DB used to persist state.'}),
+     {'metavar': 'DB_HOST',
+      'dest': 'db_host',
+      'default': 'localhost',
+      'type': str,
+      'help': 'Host for DB used to persist state.'}),
     (('-d', '--db_name'),
-        {'metavar': 'DB_NAME',
-         'dest': 'db_name',
-         'default': 'holodb',
-         'type': str,
-         'help': 'Name of DB used to persist state.'}),
+     {'metavar': 'DB_NAME',
+      'dest': 'db_name',
+      'default': 'holodb',
+      'type': str,
+      'help': 'Name of DB used to persist state.'}),
     (('-t', '--threads'),
      {'metavar': 'THREADS',
       'dest': 'threads',
@@ -70,7 +68,7 @@ arguments = [
       'help': 'The seed to be used for torch.'}),
     (('-ls', '--layer_sizes'),
      {'metavar': 'LAYER_SIZES',
-      'dest':  'layer_sizes',
+      'dest': 'layer_sizes',
       'default': [1],
       'type': list,
       'help': 'List of layer sizes of the final FC layers. Last layer must have output size of 1. For example for a hidden layer of size 200 one can specify [200,1].'}),
@@ -94,7 +92,7 @@ arguments = [
       'help': 'Number of epochs used for training.'}),
     (('-w', '--weight_decay'),
      {'metavar': 'WEIGHT_DECAY',
-      'dest':  'weight_decay',
+      'dest': 'weight_decay',
       'default': 0.01,
       'type': float,
       'help': 'Weight decay across iterations.'}),
@@ -199,25 +197,25 @@ arguments = [
 # Flags for Holoclean mode
 flags = [
     (tuple(['--verbose']),
-        {'default': False,
-         'dest': 'verbose',
-         'action': 'store_true',
-         'help': 'verbose'}),
+     {'default': False,
+      'dest': 'verbose',
+      'action': 'store_true',
+      'help': 'verbose'}),
     (tuple(['--bias']),
-        {'default': False,
-         'dest': 'bias',
-         'action': 'store_true',
-         'help': 'Use bias term'}),
+     {'default': False,
+      'dest': 'bias',
+      'action': 'store_true',
+      'help': 'Use bias term'}),
     (tuple(['--printfw']),
-        {'default': False,
-         'dest': 'print_fw',
-         'action': 'store_true',
-         'help': 'print the weights of featurizers'}),
+     {'default': False,
+      'dest': 'print_fw',
+      'action': 'store_true',
+      'help': 'print the weights of featurizers'}),
     (tuple(['--debug-mode']),
-        {'default': False,
-         'dest': 'debug_mode',
-         'action': 'store_true',
-         'help': 'dump a bunch of debug information to debug\/'}),
+     {'default': False,
+      'dest': 'debug_mode',
+      'action': 'store_true',
+      'help': 'dump a bunch of debug information to debug\/'}),
 ]
 
 
@@ -371,7 +369,6 @@ class Session:
 
         self.load_quantized_data(quantized_data)
 
-
         return quantized_data
 
     def load_quantized_data(self, df):
@@ -391,8 +388,6 @@ class Session:
             self.ds.quantized_data.create_db_index(self.ds.engine, [attr])
         logging.debug('Time to load quantized dataset: %.2f secs' % (time.time() - tic))
 
-
-
     def generate_domain(self):
         status, domain_time = self.domain_engine.setup()
         logging.info(status)
@@ -408,13 +403,13 @@ class Session:
         return self._repair_errors(featurizers)
 
     def repair_validate_errors(self, featurizers, fpath, tid_col, attr_col,
-            val_col, validate_period, na_values=None):
+                               val_col, validate_period, na_values=None):
         return self._repair_errors(featurizers, fpath, tid_col, attr_col,
-                val_col, na_values, validate_period)
+                                   val_col, na_values, validate_period)
 
     def _repair_errors(self, featurizers, fpath=None,
-            tid_col=None, attr_col=None, val_col=None, na_values=None,
-            validate_period=None):
+                       tid_col=None, attr_col=None, val_col=None, na_values=None,
+                       validate_period=None):
         """
         Repair errors and optionally runs validation set per epoch.
 
@@ -442,12 +437,12 @@ class Session:
             # Set up validation set
             name = self.ds.raw_data.name + '_clean'
             status, load_time = self.eval_engine.load_data(name, fpath,
-                    tid_col, attr_col, val_col, na_values=na_values)
+                                                           tid_col, attr_col, val_col, na_values=na_values)
             logging.info(status)
             logging.debug('Time to evaluate repairs: %.2f secs', load_time)
 
             status, fit_time = self.repair_engine.fit_validate_repair_model(self.eval_engine,
-                    validate_period)
+                                                                            validate_period)
 
         logging.info(status)
         logging.debug('Time to fit repair model: %.2f secs', fit_time)
@@ -501,9 +496,9 @@ class Session:
         FROM {dom}
         INNER JOIN {inf_vals} USING(_vid_)
         """.format(inf_vals=AuxTables.inf_values_idx.name,
-                dom=AuxTables.cell_domain.name)
+                   dom=AuxTables.cell_domain.name)
         res = self.ds.engine.execute_query(query)
         df_preds = pd.DataFrame(res,
-                columns=['tid', 'attribute', 'inferred_val', 'proba'],
-                dtype=str)
+                                columns=['tid', 'attribute', 'inferred_val', 'proba'],
+                                dtype=str)
         return df_preds
