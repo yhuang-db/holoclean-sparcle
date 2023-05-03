@@ -1,35 +1,36 @@
-from enum import Enum
 import logging
 import os
 import time
+from enum import Enum
 
-import numpy as np
 import pandas as pd
 
+from utils import dictify_df, NULL_REPR
 from .dbengine import DBengine
 from .table import Table, Source
-from utils import dictify_df, NULL_REPR
 
 
 class AuxTables(Enum):
-    c_cells        = 1
-    dk_cells       = 2
-    cell_domain    = 3
-    pos_values     = 4
-    cell_distr     = 5
+    c_cells = 1
+    dk_cells = 2
+    cell_domain = 3
+    pos_values = 4
+    cell_distr = 5
     inf_values_idx = 6
     inf_values_dom = 7
 
 
 class CellStatus(Enum):
-    NOT_SET        = 0
-    WEAK_LABEL     = 1
-    SINGLE_VALUE   = 2
+    NOT_SET = 0
+    WEAK_LABEL = 1
+    SINGLE_VALUE = 2
+
 
 class Dataset:
     """
     This class keeps all dataframes and tables for a HC session.
     """
+
     def __init__(self, name, env):
         self.env = env
         self.id = name
@@ -118,7 +119,7 @@ class Dataset:
             # Otherwise we use the entity values directly as _tid_'s.
             if entity_col is None:
                 # auto-increment
-                df.insert(0, '_tid_', range(0,len(df)))
+                df.insert(0, '_tid_', range(0, len(df)))
             else:
                 # use entity IDs as _tid_'s directly
                 df.rename({entity_col: '_tid_'}, axis='columns', inplace=True)
@@ -136,7 +137,7 @@ class Dataset:
                 for attr in self.categorical_attrs:
                     df_correct_type.loc[df_correct_type[attr].isnull(), attr] = NULL_REPR
                 for attr in self.numerical_attrs:
-                    df_correct_type[attr] =  df_correct_type[attr].astype(float)
+                    df_correct_type[attr] = df_correct_type[attr].astype(float)
 
                 df_correct_type.to_sql(self.raw_data.name, self.engine.engine, if_exists='replace', index=False,
                                        index_label=None)
@@ -156,7 +157,7 @@ class Dataset:
                 # Generate indexes on attribute columns for faster queries
                 for attr in self.raw_data.get_attributes():
                     # Generate index on attribute
-                    self.raw_data.create_db_index(self.engine,[attr])
+                    self.raw_data.create_db_index(self.engine, [attr])
 
             # Create attr_to_idx dictionary (assign unique index for each attribute)
             # and attr_count (total # of attributes)
@@ -269,7 +270,7 @@ class Dataset:
 
         Cell ID: _tid_ * (# of attributes) + attr_idx
         """
-        vid = tuple_id*self.attr_count + self.attr_to_idx[attr_name]
+        vid = tuple_id * self.attr_count + self.attr_to_idx[attr_name]
         return vid
 
     def get_statistics(self):
@@ -345,10 +346,10 @@ class Dataset:
         Filters out NULL values so no entries in the dictionary would have NULLs.
         """
         data_df = self.get_quantized_data() if self.do_quantization else self.get_raw_data()
-        tmp_df = data_df[[first_attr, second_attr]]\
-            .loc[(data_df[first_attr] != NULL_REPR) & (data_df[second_attr] != NULL_REPR)]\
-            .groupby([first_attr, second_attr])\
-            .size()\
+        tmp_df = data_df[[first_attr, second_attr]] \
+            .loc[(data_df[first_attr] != NULL_REPR) & (data_df[second_attr] != NULL_REPR)] \
+            .groupby([first_attr, second_attr]) \
+            .size() \
             .reset_index(name="count")
         return dictify_df(tmp_df)
 
@@ -356,7 +357,7 @@ class Dataset:
         """
         Returns (number of random variables, count of distinct values across all attributes).
         """
-        query = 'SELECT count(_vid_), max(domain_size) FROM %s'%AuxTables.cell_domain.name
+        query = 'SELECT count(_vid_), max(domain_size) FROM %s' % AuxTables.cell_domain.name
         res = self.engine.execute_query(query)
         total_vars = int(res[0][0])
         classes = int(res[0][1])
@@ -370,7 +371,7 @@ class Dataset:
                 "(SELECT _tid_, attribute, " \
                 "_vid_, init_value, string_to_array(regexp_replace(domain, \'[{\"\"}]\', \'\', \'gi\'), \'|||\') as domain " \
                 "FROM %s) as t1, %s as t2 " \
-                "WHERE t1._vid_ = t2._vid_"%(AuxTables.cell_domain.name, AuxTables.inf_values_idx.name)
+                "WHERE t1._vid_ = t2._vid_" % (AuxTables.cell_domain.name, AuxTables.inf_values_idx.name)
         self.generate_aux_table_sql(AuxTables.inf_values_dom, query, index_attrs=['_tid_'])
         self.aux_table[AuxTables.inf_values_dom].create_db_index(self.engine, ['attribute'])
         status = "DONE collecting the inferred values."
@@ -387,7 +388,7 @@ class Dataset:
             for attr in repaired_vals[tid]:
                 init_records[tid][attr] = repaired_vals[tid][attr]
         repaired_df = pd.DataFrame.from_records(init_records)
-        name = self.raw_data.name+'_repaired'
+        name = self.raw_data.name + '_repaired'
         self.repaired_data = Table(name, Source.DF, df=repaired_df)
         self.repaired_data.store_to_db(self.engine.engine)
         status = "DONE generating repaired dataset"
@@ -409,4 +410,3 @@ class Dataset:
         if self._embedding_model is None:
             raise Exception("cannot retrieve embedding model: it was never trained and loaded!")
         return self._embedding_model
-
