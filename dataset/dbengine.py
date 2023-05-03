@@ -1,8 +1,8 @@
-from functools import partial
 import logging
+import time
+from functools import partial
 from multiprocessing import Pool
 from string import Template
-import time
 
 import psycopg2
 import sqlalchemy as sql
@@ -17,6 +17,7 @@ class DBengine:
     A wrapper class for postgresql engine.
     Maintains connections and executes queries.
     """
+
     def __init__(self, user, pwd, db, host='localhost', port=5432, pool_size=20, timeout=60000):
         self.timeout = timeout
         self._pool = Pool(pool_size) if pool_size > 1 else None
@@ -38,7 +39,7 @@ class DBengine:
         tic = time.perf_counter()
         results = self._apply_func(partial(_execute_query, conn_args=self.conn_args), [(idx, q) for idx, q in enumerate(queries)])
         toc = time.perf_counter()
-        logging.debug('Time to execute %d queries: %.2f secs', len(queries), toc-tic)
+        logging.debug('Time to execute %d queries: %.2f secs', len(queries), toc - tic)
         return results
 
     def execute_queries_w_backup(self, queries):
@@ -53,7 +54,7 @@ class DBengine:
             partial(_execute_query_w_backup, conn_args=self.conn_args, timeout=self.timeout),
             [(idx, q) for idx, q in enumerate(queries)])
         toc = time.perf_counter()
-        logging.debug('Time to execute %d queries: %.2f secs', len(queries), toc-tic)
+        logging.debug('Time to execute %d queries: %.2f secs', len(queries), toc - tic)
         return results
 
     def execute_query(self, query):
@@ -68,7 +69,7 @@ class DBengine:
         result = conn.execute(query).fetchall()
         conn.close()
         toc = time.perf_counter()
-        logging.debug('Time to execute query: %.2f secs', toc-tic)
+        logging.debug('Time to execute query: %.2f secs', toc - tic)
         return result
 
     def create_db_table_from_query(self, name, query):
@@ -81,7 +82,7 @@ class DBengine:
             conn.execute(drop)
             conn.execute(create)
         toc = time.perf_counter()
-        logging.debug('Time to create table: %.2f secs', toc-tic)
+        logging.debug('Time to create table: %.2f secs', toc - tic)
         return True
 
     def create_db_index(self, name, table, attr_list):
@@ -102,7 +103,7 @@ class DBengine:
             stmt = sql.text(stmt)
             result = conn.execute(stmt)
         toc = time.perf_counter()
-        logging.debug('Time to create index: %.2f secs', toc-tic)
+        logging.debug('Time to create index: %.2f secs', toc - tic)
         return result
 
     def _apply_func(self, func, collection):
@@ -134,7 +135,7 @@ def _execute_query_w_backup(args, conn_args, timeout):
     tic = time.perf_counter()
     con = psycopg2.connect(conn_args)
     cur = con.cursor()
-    cur.execute("SET statement_timeout to %d;"%timeout)
+    cur.execute("SET statement_timeout to %d;" % timeout)
     try:
         cur.execute(query)
         res = cur.fetchall()
