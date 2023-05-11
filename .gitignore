@@ -28,7 +28,6 @@ debug/
 
 # sparcle
 venv/
-reset_pg_db_user.sh
 testdata/*
 !testdata/adult/
 !testdata/flight/
