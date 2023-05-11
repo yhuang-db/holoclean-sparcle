@@ -11,3 +11,6 @@ scipy
 sqlalchemy
 torch
 tqdm
+pyarrow
+polars
+connectorx
