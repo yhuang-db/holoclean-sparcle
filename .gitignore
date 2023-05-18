@@ -36,3 +36,8 @@ testdata/*
 examples/*.py
 !examples/holoclean_repair_example.py
 !examples/holoclean_repair_example_db.py
+examples/*.sh
+!examples/start_example.sh
+examples/toml/
+examples/backup/
+0-exp/
