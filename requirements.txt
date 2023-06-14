@@ -16,3 +16,4 @@ polars
 connectorx
 toml
 duckdb
+geopandas
