@@ -5,6 +5,7 @@ from enum import Enum
 
 import pandas as pd
 
+from dcparser.sdcparser import SDC, KnnSDC
 from utils import dictify_df, NULL_REPR
 from .dbengine import DBengine
 from .table import Table, Source
@@ -75,6 +76,11 @@ class Dataset:
 
         self.quantized_data = None
         self.do_quantization = False
+
+        # Sparcle
+        self.sparcle_constraints = None
+        self.created_geom = set()
+        self.created_distance_matrix = set()
 
     # TODO(richardwu): load more than just CSV files
     def load_data(self, name, fpath, na_values=None, entity_col=None, src_col=None,
@@ -410,3 +416,48 @@ class Dataset:
         if self._embedding_model is None:
             raise Exception("cannot retrieve embedding model: it was never trained and loaded!")
         return self._embedding_model
+
+    def set_sparcle_constraints(self, sdc):
+        self.sparcle_constraints = sdc
+
+    def setup_sparcle_constraints(self):
+        # 1. init sparcle auxiliary tables
+        tic = time.perf_counter()
+        for sdc in self.sparcle_constraints:
+            self.init_sparcle_table(sdc)
+
+        toc = time.perf_counter()
+        logging.debug(f'SPARCLE: Time to setup {len(self.sparcle_constraints)} sparcle auxiliary tables: {(toc - tic):.2f} secs')
+
+    def init_sparcle_table(self, sdc: SDC):
+        logging.debug(f"SPARCLE: START generating sparcle auxiliary tables for {sdc} ...")
+        tic = time.perf_counter()
+
+        # 1. create geom table: (*, _geom_)
+        if sdc.geom_table_name in self.created_geom:
+            logging.debug(f"SPARCLE: geom table exists: {sdc.geom_table_name}")
+        else:
+            sql_create_geom_table = f'''SELECT *, ST_MakePoint({sdc.x}::real, {sdc.y}::real) AS _geom_ FROM {self.raw_data.name}'''
+            self.engine.create_db_table_from_query(name=sdc.geom_table_name, query=sql_create_geom_table)
+            spatial_index_name = f'{sdc.geom_table_name}_idx'
+            self.engine.create_spatial_db_index(name=spatial_index_name, table=sdc.geom_table_name, spatial_attr='_geom_')
+            self.engine.cluster_db_using_index(table_name=sdc.geom_table_name, index_name=spatial_index_name)
+            logging.debug("SPARCLE: DONE initializing geom table")
+            self.created_geom.add(sdc.geom_table_name)
+
+        # 2. create distance matrix: (tid_1, val_1, tid_2, val_2, distance, weight)
+        if sdc.distance_matrix_table_name in self.created_distance_matrix:
+            logging.debug(f"SPARCLE: distance matrix table exists: {sdc.distance_matrix_table_name}")
+        else:
+            if isinstance(sdc, KnnSDC):
+                print("IS instance of KnnSDC")
+                self.engine.create_db_table_from_query(name=sdc.pre_dm_name, query=sdc.gen_pre_dm_sql())
+            self.engine.create_db_table_from_query(name=sdc.distance_matrix_table_name, query=sdc.gen_create_dm_sql())
+            distance_matrix_index_name = f"{sdc.distance_matrix_table_name}_idx"
+            self.engine.create_db_index(name=distance_matrix_index_name, table=sdc.distance_matrix_table_name, attr_list=["tid_1"])
+            self.engine.cluster_db_using_index(table_name=sdc.distance_matrix_table_name, index_name=distance_matrix_index_name)
+            logging.debug("SPARCLE: DONE initializing distance matrix table")
+            self.created_distance_matrix.add(sdc.distance_matrix_table_name)
+
+        toc = time.perf_counter()
+        logging.debug(f'SPARCLE: DONE generating sparcle auxiliary tables for {sdc} in {(toc - tic):.2f} secs')

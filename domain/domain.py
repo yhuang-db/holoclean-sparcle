@@ -175,6 +175,18 @@ class DomainEngine:
             init_index: domain index of init_value
             fixed: 1 if a random sample was taken since no correlated attributes/top K values
         """
+        # start of sparcle setup
+        sdc_domain_preparation = {}
+        if self.ds.sparcle_constraints is not None:
+            for sdc in self.ds.sparcle_constraints:
+                sdc_attr = sdc.attr
+                df = pd.read_sql(sdc.get_domain_sql(), self.ds.engine.polars_conn)
+                domain_dict = {tid_1: domain for tid_1, domain in zip(df["tid_1"], df["domain"])}
+                if sdc_attr in sdc_domain_preparation:
+                    sdc_domain_preparation[sdc_attr].append(domain_dict)
+                else:
+                    sdc_domain_preparation[sdc_attr] = [domain_dict]
+        # end of sparcle setup
 
         if not self.setup_complete:
             raise Exception(
@@ -193,7 +205,10 @@ class DomainEngine:
         for row in tqdm(list(records)):
             tid = row['_tid_']
             for attr in self.ds.get_active_attributes():
-                init_value, init_value_idx, dom = self.get_domain_cell(attr, row)
+                if attr in sdc_domain_preparation:
+                    init_value, init_value_idx, dom = self.get_sparcle_domain_cell(attr, row, sdc_domain_preparation[attr])
+                else:
+                    init_value, init_value_idx, dom = self.get_domain_cell(attr, row)
 
                 # We will use an estimator model for additional weak labelling
                 # below, which requires an initial pruned domain first.
@@ -248,6 +263,32 @@ class DomainEngine:
         logging.debug('DONE generating initial set of domain values in %.2fs', time.perf_counter() - tic)
 
         return domain_df
+
+    def get_sparcle_domain_cell(self, attr, row, list_domain_dict):
+        tid = row['_tid_']
+        init_value = row[attr]
+
+        domain_set = set()
+        if init_value != NULL_REPR:
+            domain_set.add(init_value)
+
+        for domain_dict in list_domain_dict:
+            if tid in domain_dict:
+                domain = set(domain_dict[tid])
+            else:
+                domain = set(self.get_random_domain(attr, set()))
+            domain_set.update(domain)
+
+        assert NULL_REPR not in domain_set
+        domain_lst = sorted(list(domain_set))  # Convert to ordered list to preserve order.
+
+        # Get the index of the initial value.
+        # NULL values are not in the domain so we set their index to -1.
+        init_value_idx = -1
+        if init_value != NULL_REPR:
+            init_value_idx = domain_lst.index(init_value)
+
+        return init_value, init_value_idx, domain_lst
 
     def get_domain_cell(self, attr, row):
         """
@@ -417,6 +458,8 @@ class DomainEngine:
         estimator = None
         if self.env['estimator_type'] == 'NaiveBayes':
             estimator = NaiveBayes(self.env, self.ds, domain_df, self.correlations)
+        elif self.env['estimator_type'] == 'SpatialBayes':
+            estimator = SpatialBayes(self.env, self.ds, domain_df, self.correlations)
         elif self.env['estimator_type'] == 'Logistic':
             estimator = Logistic(self.env, self.ds, domain_df)
         elif self.env['estimator_type'] == 'TupleEmbedding':
