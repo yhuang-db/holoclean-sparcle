@@ -6,18 +6,16 @@ from utils import NULL_REPR
 class SDC:
     __metaclass__ = ABCMeta
 
-    def __init__(self, x, y, attr, weight_function="exp(-distance / 1000)"):
+    def __init__(self, x, y, attr):
         """
         alternative weight functions:
-            - exp(-distance / 1000)
-            - 1 / (distance + 1)
-            - 1 / (distance + 1) ^ 2
             - (1 - distance / proximity_threshold) ^ n
+            - exp(-distance / 1000)
+            - 1 / (distance + 1) ^ n
         """
         self.x = x
         self.y = y
         self.attr = attr
-        self.weight_function = weight_function
         self.geom_table_name = f"geom_{self.x}{self.y}"
         self.distance_matrix_table_name = None
         self.set_error = None  # set of tid
@@ -53,9 +51,10 @@ class SDC:
 
 
 class KnnSDC(SDC):
-    def __init__(self, x, y, attr, k, weight_function="exp(-distance / 1000)"):
-        super().__init__(x, y, attr, weight_function)
+    def __init__(self, x, y, attr, k, weight_function_factor_n):
+        super().__init__(x, y, attr)
         self.knn = k
+        self.weight_function_factor_n = weight_function_factor_n
         self.use_knn = True
         self.use_distance = False
         self.setup_specific_literal()
@@ -64,7 +63,6 @@ class KnnSDC(SDC):
         return f"KnnSDC(x: {self.x}, y: {self.y}, attr: {self.attr}, k: {self.knn})"
 
     def setup_specific_literal(self):
-        self.weight_function = self.weight_function.replace("distance", "t2.dist")
         self.distance_matrix_table_name = f"distance_matrix_{self.attr}_k{self.knn}"
         self.pre_dm_name = f"pre_dm_{self.attr}_k{self.knn}"
 
@@ -97,7 +95,7 @@ class KnnSDC(SDC):
 
     def gen_create_dm_sql(self):
         sql_create_dm = f'''
-        SELECT t3.*, (1 - t3.distance/t4.max_d)^2 AS weight
+        SELECT t3.*, (1 - t3.distance/t4.max_d)^{self.weight_function_factor_n} AS weight
         FROM 
             {self.pre_dm_name} t3, 
             (
@@ -114,13 +112,14 @@ class KnnSDC(SDC):
 
 
 class DistanceSDC(SDC):
-    def __init__(self, x, y, attr, d, weight_function="exp(-distance / 1000)"):
+    def __init__(self, x, y, attr, d, weight_function_factor_n):
+        super().__init__(x, y, attr)
         if d > 0:
-            weight_function = f"(1 - distance/{d})^2"
+            self.weight_function = f"(1 - distance/{d})^{weight_function_factor_n}"
         else:
-            weight_function = "1"
-        super().__init__(x, y, attr, weight_function)
+            self.weight_function = "1"
         self.distance = d
+        self.weight_function_factor_n = weight_function_factor_n
         self.use_knn = False
         self.use_distance = True
         self.setup_specific_literal()
