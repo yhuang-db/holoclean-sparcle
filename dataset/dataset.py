@@ -437,7 +437,7 @@ class Dataset:
         if sdc.geom_table_name in self.created_geom:
             logging.debug(f"SPARCLE: geom table exists: {sdc.geom_table_name}")
         else:
-            sql_create_geom_table = f'''SELECT *, ST_MakePoint({sdc.x}::real, {sdc.y}::real) AS _geom_ FROM {self.raw_data.name}'''
+            sql_create_geom_table = f'''SELECT *, ST_MakePoint({sdc.x}::double precision, {sdc.y}::double precision) AS _geom_ FROM {self.raw_data.name}'''
             self.engine.create_db_table_from_query(name=sdc.geom_table_name, query=sql_create_geom_table)
             spatial_index_name = f'{sdc.geom_table_name}_idx'
             self.engine.create_spatial_db_index(name=spatial_index_name, table=sdc.geom_table_name, spatial_attr='_geom_')
