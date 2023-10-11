@@ -276,7 +276,7 @@ class DomainEngine:
             if tid in domain_dict:
                 domain = set(domain_dict[tid])
             else:
-                domain = set(self.get_random_domain(attr, set()))
+                return self.get_domain_cell(attr, row)
             domain_set.update(domain)
 
         assert NULL_REPR not in domain_set
