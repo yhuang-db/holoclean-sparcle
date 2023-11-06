@@ -1,0 +1,40 @@
+[dataset]
+city = "chicago"
+name = "synthetic20k"
+raw_file_name = "synthetic20k.csv"
+clean_file_name = "synthetic20k_clean_hc.csv"
+
+[constraint]
+dc_path = "chicago-synthetic20k/synthetic20k_constraints.txt"
+knn = [
+    ["x", "y", "pd", "50", "4"],
+    ["x", "y", "ward", "50", "4"],
+    ["x", "y", "zipcode", "50", "4"],
+    ["x", "y", "beat", "50", "4"],
+    ["x", "y", "ct", "15", "4"],
+]
+distance = [
+
+]
+
+[evaluation]
+eval_attrs = ["pd", "ward", "zipcode", "beat", "ct"]
+file_name = "synthetic20k_k50n4.csv"
+
+[parameter]
+epochs = 3
+estimator_type = "SpatialBayes"
+bayes_label_threshold = 0.95
+bayes_drop_threshold = 0.01
+
+[detector]
+null = true
+sparcle_dc = true
+dc = false
+
+[estimator]
+run_estimator = true
+
+[feature]
+continuous = true  # sparcle feature
+constraint = false  # holoclean DC feature

@@ -41,3 +41,9 @@ examples/*.sh
 examples/toml/
 examples/backup/
 0-exp/
+!0-exp/sparcle_driver.py
+!0-exp/eval_driver.py
+!0-exp/start_sparcle.sh
+!0-exp/start_sparcle_multi.sh
+!0-exp/nyc-crash
+!0-exp/chicago-synthetic20k

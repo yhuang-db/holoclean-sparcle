@@ -1,0 +1,37 @@
+[dataset]
+city = "nyc"
+name = "crash"
+raw_file_name = "crash.csv"
+clean_file_name = "crash_clean_hc.csv"
+
+[constraint]
+dc_path = "nyc-crash/crash_constraints.txt"
+knn = [
+    ["x", "y", "boro", "50", "8"],
+    ["x", "y", "zipcode", "50", "8"],
+]
+distance = [
+
+]
+
+[evaluation]
+eval_attrs = ["boro", "zipcode"]
+file_name = "crash_k50n8.csv"
+
+[parameter]
+epochs = 3
+estimator_type = "SpatialBayes"
+bayes_label_threshold = 0.95
+bayes_drop_threshold = 0.01
+
+[detector]
+null = true
+sparcle_dc = true
+dc = false
+
+[estimator]
+run_estimator = true
+
+[feature]
+continuous = true  # sparcle feature
+constraint = false  # holoclean DC feature
