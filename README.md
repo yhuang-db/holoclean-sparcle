@@ -1,8 +1,12 @@
 # Sparcle: Boosting the Accuracy of Data Cleaning Systems through Spatial Awareness
 
 Sparcle is implemented as a fork of HoloClean. 
+- HoloClean implementation (updated to python3.10): https://github.com/yhuang-db/holoclean-sparcle/tree/latest-aimnet-310
+- Sparcle implementation: https://github.com/yhuang-db/holoclean-sparcle/tree/latest-aimnet-310-sparcle
 
 To learn about the implementation of Sparcle, the best way is to compare Sparcle with HoloClean. Use [Github to compare forks](https://github.com/yhuang-db/holoclean-sparcle/compare/latest-aimnet-310...yhuang-db:holoclean-sparcle:latest-aimnet-310-sparcle).
+
+The experiment code, driver and configurations all in the directory [0-exp](https://github.com/yhuang-db/holoclean-sparcle/tree/latest-aimnet-310-sparcle/0-exp)
 
 The experiments in the paper are conducted with the following competitors:
 - HoloClean: https://github.com/yhuang-db/holoclean-baseline
