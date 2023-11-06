@@ -60,11 +60,11 @@ class KnnSDC(SDC):
         self.setup_specific_literal()
 
     def __repr__(self):
-        return f"KnnSDC(x: {self.x}, y: {self.y}, attr: {self.attr}, k: {self.knn})"
+        return f"KnnSDC(x: {self.x}, y: {self.y}, attr: {self.attr}, k: {self.knn}, n: {self.weight_function_factor_n})"
 
     def setup_specific_literal(self):
-        self.distance_matrix_table_name = f"distance_matrix_{self.attr}_k{self.knn}"
-        self.pre_dm_name = f"pre_dm_{self.attr}_k{self.knn}"
+        self.distance_matrix_table_name = f"distance_matrix_{self.attr}_k{self.knn}n{self.weight_function_factor_n}"
+        self.pre_dm_name = f"pre_dm_{self.attr}_k{self.knn}n{self.weight_function_factor_n}"
 
     def gen_pre_dm_sql(self):
         sql_pre_dm = f'''
@@ -125,11 +125,11 @@ class DistanceSDC(SDC):
         self.setup_specific_literal()
 
     def __repr__(self):
-        return f"DistanceSDC(x: {self.x}, y: {self.y}, attr: {self.attr}, distance: {self.distance})"
+        return f"DistanceSDC(x: {self.x}, y: {self.y}, attr: {self.attr}, distance: {self.distance}, n: {self.weight_function_factor_n})"
 
     def setup_specific_literal(self):
         self.weight_function = self.weight_function.replace("distance", "ST_Distance(t1._geom_, t2._geom_)")
-        self.distance_matrix_table_name = f"distance_matrix_{self.attr}_d{self.distance}"
+        self.distance_matrix_table_name = f"distance_matrix_{self.attr}_d{self.distance}n{self.weight_function_factor_n}"
 
     def gen_create_dm_sql(self):
         sql_create_dm = f'''
