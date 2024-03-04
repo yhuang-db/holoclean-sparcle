@@ -69,9 +69,9 @@ def attr_evaluation(toml_dict, dataset_city, dataset_name, runtime):
             "error_count": attr_error_count,
             "repair_count": attr_repair_count,
             "correct_repair_count": attr_correct_repair_count,
-            "precision": attr_correct_repair_count / attr_repair_count,
-            "recall": attr_correct_repair_count / attr_error_count,
-            "f1": 2 * attr_correct_repair_count / (attr_repair_count + attr_error_count)
+            "precision": attr_correct_repair_count / attr_repair_count if attr_repair_count > 0 else 0,
+            "recall": attr_correct_repair_count / attr_error_count if attr_error_count > 0 else 0,
+            "f1": 2 * attr_correct_repair_count / (attr_repair_count + attr_error_count) if (attr_repair_count + attr_error_count) > 0 else 0
         }
         eval_stat.append(attr_stat)
 
@@ -82,9 +82,9 @@ def attr_evaluation(toml_dict, dataset_city, dataset_name, runtime):
         "error_count": error_count,
         "repair_count": repair_count,
         "correct_repair_count": correct_repair_count,
-        "precision": correct_repair_count / repair_count,
-        "recall": correct_repair_count / error_count,
-        "f1": 2 * correct_repair_count / (repair_count + error_count)
+        "precision": correct_repair_count / repair_count if repair_count > 0 else 0,
+        "recall": correct_repair_count / error_count if error_count > 0 else 0,
+        "f1": 2 * correct_repair_count / (repair_count + error_count) if (repair_count + error_count) > 0 else 0
     }
     eval_stat.append(overall_stat)
 
