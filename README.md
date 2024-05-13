@@ -1,3 +1,10 @@
+# Sparcle: Boosting the Accuracy of Data Cleaning Systems through Spatial Awareness
+
+Sparcle is implemented as a fork and a branch of HoloClean. 
+- Sparcle implementation: https://github.com/yhuang-db/holoclean-sparcle/tree/latest-aimnet-310-sparcle
+
+---
+
 Master:
 [![Build Status](https://travis-ci.org/HoloClean/holoclean.svg?branch=master)](https://travis-ci.org/HoloClean/holoclean)
 Dev:
